@@ -17,11 +17,11 @@
   <properties>
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
-    <spring.boot.version>4.0.6</spring.boot.version>
+    <spring.boot.version>4.0.7</spring.boot.version>
     <!-- Override the tomcat-embed-core version managed by the spring-boot-dependencies BOM
-         to fix CVE-2026-41293, CVE-2026-41284, CVE-2026-43513, CVE-2026-43512, CVE-2026-42498,
-         CVE-2026-43515. Drop once a Spring Boot 4.0.x patch bumps Tomcat for us. -->
-    <tomcat.version>11.0.22</tomcat.version>
+         to fix CVE-2026-50229, CVE-2026-55276, CVE-2026-53434, CVE-2026-53404, CVE-2026-55956.
+         Drop once a Spring Boot 4.0.x patch bumps Tomcat for us. -->
+    <tomcat.version>11.0.23</tomcat.version>
     <jib-maven-plugin.version>3.4.2</jib-maven-plugin.version>
     <maven-surefire.version>3.5.1</maven-surefire.version>
     <maven-surefire-plugin.version>${maven-surefire.version}</maven-surefire-plugin.version>
@@ -61,13 +61,12 @@
         <scope>import</scope>
       </dependency>
       <!-- Override every tomcat-embed-* artifact managed by spring-boot-dependencies
-           to fix CVE-2026-41293, CVE-2026-41284, CVE-2026-43513, CVE-2026-43512,
-           CVE-2026-42498, CVE-2026-43515. The CVEs apply to Tomcat itself, so every
-           tomcat-embed-* sibling is flagged at the same version. A <tomcat.version>
-           property override has no effect on imported BOMs (only on parent
-           inheritance), so each artifact must be pinned via an explicit
-           dependencyManagement entry. Drop once a Spring Boot 4.0.x patch bumps
-           Tomcat for us. -->
+           to fix CVE-2026-50229, CVE-2026-55276, CVE-2026-53434, CVE-2026-53404,
+           CVE-2026-55956. The CVEs apply to Tomcat itself, so every tomcat-embed-*
+           sibling is flagged at the same version. A <tomcat.version> property
+           override has no effect on imported BOMs (only on parent inheritance),
+           so each artifact must be pinned via an explicit dependencyManagement
+           entry. Drop once a Spring Boot 4.0.x patch bumps Tomcat for us. -->
       <dependency>
         <groupId>org.apache.tomcat.embed</groupId>
         <artifactId>tomcat-embed-core</artifactId>
@@ -103,15 +102,22 @@
       <artifactId>commons-lang3</artifactId>
       <version>3.19.0</version>
     </dependency>
+    <!-- Pinning version to address CVE-2026-34477, CVE-2026-34479 -->
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-api</artifactId>
-      <version>2.25.3</version>
+      <version>2.25.4</version>
     </dependency>
     <dependency>
       <groupId>org.bitbucket.b_c</groupId>
       <artifactId>jose4j</artifactId>
       <version>0.9.6</version>
+    </dependency>
+    <!-- Pinning version to address CVE-2025-67030 (directory traversal in Expand.extractFile) -->
+    <dependency>
+      <groupId>org.codehaus.plexus</groupId>
+      <artifactId>plexus-utils</artifactId>
+      <version>4.0.3</version>
     </dependency>
     <!--end transitive dependencies-->
 
