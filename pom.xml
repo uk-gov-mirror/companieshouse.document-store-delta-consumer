@@ -18,6 +18,10 @@
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
     <spring.boot.version>4.0.6</spring.boot.version>
+    <!-- Override the tomcat-embed-core version managed by the spring-boot-dependencies BOM
+         to fix CVE-2026-41293, CVE-2026-41284, CVE-2026-43513, CVE-2026-43512, CVE-2026-42498,
+         CVE-2026-43515. Drop once a Spring Boot 4.0.x patch bumps Tomcat for us. -->
+    <tomcat.version>11.0.22</tomcat.version>
     <jib-maven-plugin.version>3.4.2</jib-maven-plugin.version>
     <maven-surefire.version>3.5.1</maven-surefire.version>
     <maven-surefire-plugin.version>${maven-surefire.version}</maven-surefire-plugin.version>
@@ -38,9 +42,7 @@
     <!--explicit versions of transitive dependencies with vulnerabilities in previous versions-->
     <xmlunit-core.version>2.10.0</xmlunit-core.version>
     <avro.version>1.12.1</avro.version>
-    <!-- TODO: lz4-java CVEs (CVE-2025-12183, CVE-2025-66566) require at.yawk.lz4:lz4-java:1.10.1
-         The original org.lz4:lz4-java is discontinued. The artifact at.yawk.lz4:lz4-java:1.10.1
-         needs to be added to the company's artifact repository to fix these vulnerabilities -->
+    <lz4-java-fork.version>1.10.2</lz4-java-fork.version>
 
     <!--sonar configuration-->
     <sonar.coverage.jacoco.xmlReportPaths>
@@ -51,21 +53,35 @@
 
   <dependencyManagement>
     <dependencies>
-      <!-- Addresses CVE-2026-2332 across all org.eclipse.jetty.ee10:* artifacts; declared before
-           spring-boot-dependencies so first-wins BOM resolution pins the whole jetty-ee10 family -->
-      <dependency>
-        <groupId>org.eclipse.jetty.ee10</groupId>
-        <artifactId>jetty-ee10-bom</artifactId>
-        <version>12.0.35</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
         <version>${spring.boot.version}</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+      <!-- Override every tomcat-embed-* artifact managed by spring-boot-dependencies
+           to fix CVE-2026-41293, CVE-2026-41284, CVE-2026-43513, CVE-2026-43512,
+           CVE-2026-42498, CVE-2026-43515. The CVEs apply to Tomcat itself, so every
+           tomcat-embed-* sibling is flagged at the same version. A <tomcat.version>
+           property override has no effect on imported BOMs (only on parent
+           inheritance), so each artifact must be pinned via an explicit
+           dependencyManagement entry. Drop once a Spring Boot 4.0.x patch bumps
+           Tomcat for us. -->
+      <dependency>
+        <groupId>org.apache.tomcat.embed</groupId>
+        <artifactId>tomcat-embed-core</artifactId>
+        <version>${tomcat.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.tomcat.embed</groupId>
+        <artifactId>tomcat-embed-el</artifactId>
+        <version>${tomcat.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.tomcat.embed</groupId>
+        <artifactId>tomcat-embed-websocket</artifactId>
+        <version>${tomcat.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -106,6 +122,20 @@
     <dependency>
       <groupId>org.springframework.kafka</groupId>
       <artifactId>spring-kafka</artifactId>
+      <exclusions>
+        <!-- org.lz4:lz4-java 1.8.0 is abandoned upstream; replaced below with maintained fork.
+             CVE-2025-12183, CVE-2025-66566, GHSA-cmp6-m4wj-q63q, GHSA-vqf4-7m7x-wgfc -->
+        <exclusion>
+          <groupId>org.lz4</groupId>
+          <artifactId>lz4-java</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <!-- Drop-in API-compatible community fork of the abandoned org.lz4:lz4-java -->
+    <dependency>
+      <groupId>at.yawk.lz4</groupId>
+      <artifactId>lz4-java</artifactId>
+      <version>${lz4-java-fork.version}</version>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
